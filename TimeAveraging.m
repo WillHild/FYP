@@ -68,11 +68,3 @@ title('Histogram of Droplet Sizes');
 
 
 
-%% Function Definition
-function processedImage = RemoveBackground(background, spray)
-    difference = double(spray) - double(background);
-    % Rescale the image so all brightness values sit in the uint8 range
-    difference = (difference - min(difference(:))) / (max(difference(:)) - min(difference(:)));
-    % Convert difference back to uint8 for display
-    processedImage = im2uint8(difference);
-end
