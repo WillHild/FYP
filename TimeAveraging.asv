@@ -22,7 +22,6 @@ end
 % Preallocate a matrix for holding the mean brightness of each frame
 meanBrightness = zeros(imageCount,1);
 for k = 1 : length(images)
-    currentImage = images{k};
     meanBrightness(k) = mean(mean(currentImage));
 end
 
