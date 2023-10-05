@@ -45,7 +45,7 @@ function [averageBackground, averageSpray, backgroundEndIndex] = FindBackground(
       end
       
       % Compute the index of the first image with an average brightness less than the threshold.
-      if (meanBrightness(k) < backgroundBrightnessThreshold && isempty(backgroundEndIndex))
+      if (meanBrightness(k) < backgroundBrightnessThreshold && backgroundEndIndex == 0)
           backgroundEndIndex = k;
       end
       
