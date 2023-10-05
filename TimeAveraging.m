@@ -1,14 +1,13 @@
 %% Settings
-%imageFolder = '/Volumes/New Volume/Coaxial_LP_Free_Zoom/Coaxial_LP_Free_Zoom'; % James Laptop
-imageFolder = 'F:/Coaxial_LP_Free_Zoom/Coaxial_LP_Free_Zoom'; % James Desktop
+%imageFolder = '/Volumes/New Volume/Coaxial_80bar_Free_Zoom'; % James Laptop
+imageFolder = 'F:/Coaxial_80bar_Free_Zoom'; % James Desktop
 
 filePattern = 'Cam_*.tif'; 
 
 % Sample image index
 sampleImageIndex = 1000;
 
-% Droplet threshold value (Should be determined algorythmically in the
-% future)
+% Droplet threshold value
 dropletThreshold = 70;
 
 %% Load Images (First run only)
@@ -18,61 +17,8 @@ if(~exist('images','var') || isempty(images) || ~isequal(LoadImages(imageFolder,
     [images, imageCount] = LoadImages(imageFolder, filePattern);
 end
 
-%% Determine Mean Brightness of images
-% Preallocate a matrix for holding the mean brightness of each frame
-meanBrightness = zeros(imageCount,1);
-for k = 1 : length(images)
-    currentImage = images{k};
-    meanBrightness(k) = mean(mean(currentImage));
-end
-
-% Background Brightness threshold. This is used to automatically determine
-% the mmaximum brightness of an image before it is determined to be a
-% background image
-backgroundBrightnessThreshold = 0.5*max(meanBrightness) + 0.5 * min(meanBrightness);
-
 %% Processing to determine background image and to determine mean spray image
-% Preallocate a matrix to hold the sum of all images, both background and
-% spray
-sprayImagesSum = [];
-backgroundImagesSum = [];
-
-for k = 1 : length(images)
-  % Read in image as an array with imread()
-  currentImage = images{k};
-  
-  % Add current image to respective sum
-  if (meanBrightness(k) < backgroundBrightnessThreshold)
-      if isempty(sprayImagesSum)
-        % If sumImage is empty, initialize it with the current image
-        sprayImagesSum = double(currentImage);
-      else
-        % Otherwise, add the current image to sumImage
-        sprayImagesSum = sprayImagesSum + double(currentImage);
-      end
-  else
-      if isempty(backgroundImagesSum)
-        % If sumImage is empty, initialize it with the current image
-        backgroundImagesSum = double(currentImage);
-      else
-        % Otherwise, add the current image to sumImage
-        backgroundImagesSum = backgroundImagesSum + double(currentImage);
-      end
-  end
-end
-
-% Compute number of images for each average
-sprayImagesLength = sum(meanBrightness < backgroundBrightnessThreshold);
-backgroundImagesLength = sum(meanBrightness >= backgroundBrightnessThreshold);
-
-% Compute the average spray image
-avgSprayImage = sprayImagesSum / sprayImagesLength;
-% Convert back to uint8 for display purposes
-avgSprayImage = uint8(avgSprayImage);
-% Compute the average background image
-avgBackgroundImage = backgroundImagesSum / backgroundImagesLength;
-% Convert back to uint8 for display purposes
-avgBackgroundImage = uint8(avgBackgroundImage);
+[avgBackgroundImage, avgSprayImage, backgroundEndIndex] = FindBackground(images);
 
 %% Background image subtraction (not super important for finding spray angle, but I thought that i would try it out)
 % Cast both images to doubles so that the subtraction can return negative
