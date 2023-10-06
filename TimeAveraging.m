@@ -1,11 +1,14 @@
+close all;
 %% Settings
 %imageFolder = '/Volumes/New Volume/Coaxial_80bar_Free_Zoom'; % James Laptop
 imageFolder = 'F:/Coaxial_80bar_Free_Zoom'; % James Desktop
 
 filePattern = 'Cam_*.tif'; 
 
+intervalCount = 10;
+
 % Sample image index
-sampleImageIndex = 1000;
+sampleImageIndex = 2000;
 
 % Droplet threshold value
 dropletThreshold = 70;
@@ -20,9 +23,59 @@ end
 %% Processing to determine background image and to determine mean spray image
 [avgBackgroundImage, avgSprayImage, backgroundEndIndex] = FindBackground(images);
 
+%% Average the image a specified number of times
+intervals = floor(linspace(backgroundEndIndex, imageCount, intervalCount + 1));
+% Preallocate means array 
+intervalMeans = cell(intervalCount + 1, 1);
+for k = 1:intervalCount
+    startIndex = intervals(k);
+    endIndex = intervals(k + 1);
+    intervalImages = images(startIndex:endIndex);
+    intervalMeans{k} = uint8(mean(cat(3, intervalImages{:}), 3));
+end
 %% Background image subtraction (not super important for finding spray angle, but I thought that i would try it out)
-% Cast both images to doubles so that the subtraction can return negative
-% values.
+meanBackgroundRemoved = cell(intervalCount + 1, 1);
+for k = 1:intervalCount
+    meanBackgroundRemoved{k} = RemoveBackground(avgBackgroundImage, intervalMeans{k});
+end
+%% Canny edge detection to calculate cone angles
+meanEdgeDetected = cell(intervalCount + 1, 1);
+for k = 1:intervalCount
+    meanEdgeDetected{k} = edge(imresize(intervalMeans{k},0.1), 'canny');
+end
+%% Crop images and find angles
+for k = 1:intervalCount
+    angles(k) = FindAngles(imresize(meanBackgroundRemoved{k},0.1));
+end
+
+
+%% Plot images 
+figure(10)
+for k = 1:intervalCount
+    subplot(4, 3, k);
+    imshow(uint8(intervalMeans{k}))
+    title(num2str(k));
+end
+%% Plot images with background subtracted
+figure(11)
+for k = 1:intervalCount
+    subplot(4, 3, k);
+    imshow(uint8(meanBackgroundRemoved{k}))
+    title(num2str(k));
+end
+%% Plot images with canny edge detection
+figure(12)
+for k = 1:intervalCount
+    subplot(4, 3, k);
+    imshow(meanEdgeDetected{k})
+    title(num2str(k));
+end
+
+%% Plot cone angle for 10 shots
+figure();
+plot(1:10, angles);
+
+
 difference = RemoveBackground(avgBackgroundImage, avgSprayImage);
 
 sampleSprayImage = RemoveBackground(avgBackgroundImage, images{sampleImageIndex});

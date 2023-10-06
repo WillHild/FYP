@@ -1,3 +1,4 @@
+function [images, numLoaded] = LoadImages(folderPath, filePattern, numImages)
 % LOADIMAGES Load images from a folder.
 %   [IMAGES, NUMLOADED] = LOADIMAGES(FOLDERPATH) loads all the images in the folder
 %   specified by FOLDERPATH and returns them in a cell array IMAGES. It also returns
@@ -12,8 +13,6 @@
 %   NUMIMAGES images in the folder specified by FOLDERPATH that match the
 %   pattern specified by FILEPATTERN and returns them in a cell array IMAGES. It also returns
 %   the number of images loaded as NUMLOADED.
-
-function [images, numLoaded] = LoadImages(folderPath, filePattern, numImages)
     % If filePattern is not provided, use the default pattern 'Cam_*.tif'.
     if nargin < 2
         filePattern = 'Cam_*.tif';

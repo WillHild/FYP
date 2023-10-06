@@ -1,7 +1,7 @@
+function [averageBackground, averageSpray, backgroundEndIndex] = FindBackground(images)
 % FINDBACKGROUND - This function computes the average spray and background images from a set of images.
 %   [AVERAGEBACKGROUND, AVERAGESPRAY, BACKGROUNDENDINDEX] = FINDBACKGROUND(IMAGES) computes the average spray and background images from a set of images.
 %   The function also returns the index of the first image with an average brightness less than the threshold.
-function [averageBackground, averageSpray, backgroundEndIndex] = FindBackground(images)
     backgroundEndIndex = 0;
     imageCount = length(images);
     meanBrightness = zeros(imageCount,1);
