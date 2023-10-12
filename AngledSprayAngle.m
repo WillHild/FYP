@@ -1,12 +1,12 @@
 close all;
 %% Settings
 %imageFolder = '/Volumes/New Volume/Coaxial_80bar_Free_Zoom'; % James Laptop
-imageFolder = 'F:/Coaxial_80bar_Free_Zoom'; % James Desktop
-timeDataPath = "Timestamp_Current\Coaxial_80bar_Free_Zoom_new.csv";
+imageFolder = 'F:\Angle_80bar_Free_Zoom'; % James Desktop
+timeDataPath = "Timestamp_Current\Angled_80bar_Free_Zoom.csv";
 
 filePattern = 'Cam_*.tif'; 
 
-intervalCount = 24;
+intervalCount = 30;
 
 % Sample image index
 sampleImageIndex = 2000;
@@ -56,7 +56,7 @@ resizedImages = cell(intervalCount, 1);
 croppedImages = cell(intervalCount, 1);
 for k = 1:intervalCount
     currentImage = meanBackgroundRemoved{k};
-    crop_region = [size(currentImage,2)/2, size(currentImage,1)/2, size(currentImage,2)/2 - 200, size(currentImage,1)/2 - 50];
+    crop_region = [40, 0, size(currentImage,2)/2 - 100, size(currentImage,1)/2 - 400];
     croppedImages{k} = imcrop(currentImage, crop_region);
     resizedImages{k} = imresize(croppedImages{k},rescaleFactor);
     
@@ -76,9 +76,8 @@ for k = 1:intervalCount
     currentImage = meanEdgeDetected{k};
     [angles(k), lineGroups{k}] = FindAngles(meanEdgeDetected{k});
 end
-% Spray angle correction
-angles = 2*angles;
-
+% Correct for qeird angled stuff
+angles = 68 - 180 + angles;
 %% Plotting 
 shouldPlotDetailed = true;
 if (shouldPlotDetailed)
@@ -145,7 +144,7 @@ end
 figure(5);
 correctedPressures = polyval(polyfit(intervalTimes(14:end),pressuresAtIntervalTimes(14:end),1),intervalTimes);
 plot(correctedPressures, angles, "*");
-title("Spray Angle vs Pressure (Swirler)")
+title("Spray Angle vs Pressure (Single Jet)")
 xlabel("Pressure (Pa)")
 ylabel("Cone Angle (deg)")
 grid on
@@ -164,37 +163,9 @@ xlabel("Time (s)")
 ylabel("Pressure (Pa)")
 hold off
 
+
 difference = RemoveBackground(avgBackgroundImage, avgSprayImage);
 
 sampleSprayImage = RemoveBackground(avgBackgroundImage, images{sampleImageIndex});
 
-%% Droplet detection
-% Threshold the image. Necessary first step for regionProps droplet
-% detection
-thresholdedImage = (sampleSprayImage < dropletThreshold);
-% Remove droplets smaller than a given size (to remove noise)
-noiseRemoved = bwareaopen(thresholdedImage, 5);
-% Measure properties of connected components
-stats = regionprops('table', noiseRemoved, 'Area');
-
-% Histogram of droplet sizes
-figure(2)
-data = stats.Area;
-% Compute the mean and standard deviation of the data
-mu = mean(data);
-sigma = std(data);
-% Define a threshold for outliers in standard deviations
-threshold = 2;
-% Find outliers
-outliers = abs(data - mu) > threshold * sigma;
-% Remove outliers
-dataTrimmed = data(~outliers);
-
-histogram(dataTrimmed);
-xlabel('Area');
-ylabel('Frequency');
-title('Histogram of Droplet Sizes');
-
-
-
-
+corr(correctedPressures, angles)
