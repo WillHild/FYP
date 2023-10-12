@@ -1,4 +1,4 @@
-function [images, numLoaded] = LoadImages(folderPath, filePattern, numImages)
+function [images, numLoaded] = LoadImages(folderPath, filePattern, numImages, startIndex)
 % LOADIMAGES Load images from a folder.
 %   [IMAGES, NUMLOADED] = LOADIMAGES(FOLDERPATH) loads all the images in the folder
 %   specified by FOLDERPATH and returns them in a cell array IMAGES. It also returns
@@ -22,6 +22,11 @@ function [images, numLoaded] = LoadImages(folderPath, filePattern, numImages)
     if nargin < 3
         numImages = Inf;
     end
+
+    % If startIndex is not provided, load from 0.
+    if nargin < 4
+        startIndex = 0;
+    end
     
     % Find all files with the specified pattern.
     filePattern = fullfile(folderPath, filePattern);
@@ -31,8 +36,10 @@ function [images, numLoaded] = LoadImages(folderPath, filePattern, numImages)
     images = cell(min(length(files), numImages), 1);
 
     % Load and store images with imread.
-    for k = 1 : min(length(files), numImages)
-        baseFileName = files(k).name;
+    numToLoad = min(length(files), numImages);
+    for k = 1 : numToLoad
+        imageToLoad = mod(k + startIndex - 1,numToLoad) + 1;
+        baseFileName = files(imageToLoad).name;
         fullFileName = fullfile(folderPath, baseFileName);
         currentImage = imread(fullFileName);
         images{k} = currentImage;
